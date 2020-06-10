@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <string.h>
 
 int alloc_size;
 int alloc_block_count;
@@ -11,6 +12,7 @@ void *wmalloc(int size)
 {
     mem_head_t *p;
     p = (mem_head_t *)malloc(sizeof(mem_head_t) + size);
+    memset(p, 0x00, sizeof(mem_head_t) + size);
     if (p) {
         p->size = size;
         alloc_size += size;

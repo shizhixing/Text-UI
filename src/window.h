@@ -61,7 +61,7 @@ void set_scroll_count(window_t *w, int count);
 
 text_t *create_listview(window_t *parent, int x, int y, int width, int height);
 void listview_add_column(window_t *w, char *text, int width);
-
+void listview_add_row(window_t *w, char *text);
 
 enum {
     WIN_STYLE_NONE  = 0,

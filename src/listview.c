@@ -15,8 +15,10 @@ typedef struct list_head_t {
 typedef struct list_row_t {
     struct list_row_t *up;
     struct list_row_t *down;
-} 
-list_row_t;
+    struct list_row_t *prev;
+    struct list_row_t *next;
+    char text[256];
+} list_row_t;
 
 typedef struct inner_listview_t {
     list_head_t *head, *tail;
@@ -24,6 +26,7 @@ typedef struct inner_listview_t {
     list_row_t *row_tail;
     list_row_t *display_start_row;
     int display_row_count;
+    int total_row_count;
 } inner_listview_t;
 
 #define WINDOW_TO_LISTVIEW(x) ((inner_listview_t *)((x) + 1))
@@ -31,8 +34,27 @@ typedef struct inner_listview_t {
 void draw_listview(window_t *w) 
 {
     inner_listview_t *t = WINDOW_TO_LISTVIEW(w);
+    list_head_t *head;
+    list_row_t *row, *cell;
+    int left, top, width, height;
+    int i, y = 2;
     draw_table_rectangle(w, 0, 0, w->width - 1, w->height - 1, WHITE, BLACK);
-    draw_table_line(w, 0, 10, w->width - 1, 10, WHITE, BLACK);
+    for (y = 1;y < w->height - 1;y++) {
+        for (i = 1;i < w->width - 1;i++) {
+            win_printf(w, i, y, WHITE, BLACK, FALSE, " ");
+        }
+    }
+    for (y = 2, row = t->row_head;y < w->height - 1 && row;y++, row = row->next) {
+        for (head = t->head, cell = row;head && cell;head = head->next, cell = cell->next) {
+            get_win_size(head->btn, &left, &top, &width, &height);
+            for (i = 0;i < left + width - 1;i++) {
+                if (cell->text[i] == 0) break;
+                if ((i + left > 0) && (i + left < w->width - 1)) {
+                    win_printf(w, i + left, y, WHITE, BLACK, FALSE, "%c", cell->text[i]);
+                }
+            }
+        }
+    }
 }
 
 void internal_key_listview(window_t *w, unsigned int key)
@@ -59,6 +81,8 @@ void scroll_on_change_listview(window_t *w)
             off = left + width;
         }
     }
+    draw_listview(p);
+    show_window_inner(p);
 }
 
 text_t *create_listview(window_t *parent, int x, int y, int width, int height)
@@ -108,4 +132,17 @@ void listview_add_column(window_t *w, char *text, int width)
 
 void listview_add_row(window_t *w, char *text)
 {
+    inner_listview_t *t = WINDOW_TO_LISTVIEW(w);
+    list_row_t *row = (list_row_t *)MALLOC(sizeof(list_row_t));
+    if (t->row_head && t->row_tail) {
+        t->row_tail->next = row;
+        row->prev = t->row_tail;
+        t->row_tail = row;
+    } else {
+        t->row_head = row;
+        t->row_tail = row;
+    }
+    strncpy(row->text, text, sizeof(row->text));
+    t->total_row_count++;
+    set_scroll_count(w->vert_scroll, t->total_row_count - w->height + 3);
 }

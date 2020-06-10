@@ -60,4 +60,5 @@ void user_main()
     listview_add_column(listview, "Head4", 20);
     listview_add_column(listview, "Head5", 20);
     listview_add_column(listview, "Head6", 20);
+    listview_add_row(listview, "Data1");
 }
